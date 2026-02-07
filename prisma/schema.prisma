@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider  = "prisma-client-py"
+  interface = "asyncio"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Urls {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  websiteName String     @map("website_name")
+  desc        String?
+  BaseUrl     String     @unique @map("base_url")
+  inPipeline  Boolean    @default(false) @map("in_pipeline")
+  strictCheck Boolean    @default(false) @map("strict_check")
+  maxDepth    Int        @default(3) @map("max_depth")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime?  @updatedAt @map("updated_at")
+  Scraping    Scraping[]
+
+  @@map("urls")
+}
+
+enum Status {
+  IN_PROGESS
+  FAILED
+  SUCESS
+}
+
+model Scraping {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  baseUrlId String    @map("base_url_id") @db.Uuid
+  baseUrl   Urls      @relation(fields: [baseUrlId], references: [id])
+  url       String
+  status    Status?
+  pageHash  String?   @map("page_hash")
+  s3Key     String?   @map("s3_key")
+  depth     Int?      @default(0)
+  error     String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("scraping")
+}
